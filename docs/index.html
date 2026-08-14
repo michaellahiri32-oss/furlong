@@ -338,7 +338,7 @@ function route(){
 
 $('back').addEventListener('click',()=>{ if(history.length>1) history.back(); else location.hash='#/'; });
 window.addEventListener('hashchange',route);
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
 route(); load();
 setInterval(load, 15*60*1000);
 </script>

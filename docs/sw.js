@@ -1,8 +1,9 @@
 /* Furlong service worker — installable + offline, always fresh.
-   HTML shell and data: network-first (so code + data updates show on refresh),
-   falling back to cache when offline. Static icons: cache-first. */
-const SHELL = 'furlong-shell-v3';
-const DATA = 'furlong-data-v3';
+   HTML shell and data: network-first with cache:'reload' so we bypass the HTTP
+   cache and always get the newest code + data; fall back to cache when offline.
+   Static icons: cache-first. */
+const SHELL = 'furlong-shell-v4';
+const DATA = 'furlong-data-v4';
 const SHELL_FILES = [
   './', './index.html', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png',
@@ -28,9 +29,9 @@ self.addEventListener('fetch', e => {
     || url.pathname.endsWith('/') || url.pathname.endsWith('index.html');
 
   if (isJSON || isShell) {
-    // network-first: fetch fresh, cache a copy, fall back to cache offline
+    // network-first, bypassing the HTTP cache so updates always win
     e.respondWith(
-      fetch(e.request).then(res => {
+      fetch(e.request, { cache: 'reload' }).then(res => {
         const copy = res.clone();
         caches.open(isJSON ? DATA : SHELL).then(c => c.put(e.request, copy));
         return res;
@@ -38,6 +39,5 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-  // cache-first for static assets (icons, manifest)
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
