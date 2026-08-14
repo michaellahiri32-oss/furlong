@@ -16,6 +16,8 @@
   --ink2:#52514e; --muted:#898781; --grid:#e1e0d9; --border:rgba(11,11,11,.10);
   --blue:#256abf; --blue-bar:#2a78d6; --chip:#eef0ee; --good:#0ca30c;
   --good-ink:#006300; --warn:#fab219; color-scheme:light;
+  --brand-green:#7ed01e; --brand-blue:#1f9cf0;
+  --brand-grad:linear-gradient(90deg,#7ed01e,#1f9cf0);
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root{
@@ -116,8 +118,24 @@ a{color:inherit;text-decoration:none}
 .meta b{color:var(--ink2);font-weight:640}
 .conn{font-size:12px;color:var(--muted);margin:0 0 7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar{position:relative;height:20px;background:var(--chip);border-radius:5px;overflow:hidden}
-.bar>span{position:absolute;inset:0 auto 0 0;background:var(--blue-bar);border-radius:5px}
-.bar>b{position:absolute;right:8px;top:0;line-height:20px;font-size:12.5px;font-weight:640;font-variant-numeric:tabular-nums}
+.bar>span{position:absolute;inset:0 auto 0 0;background:var(--brand-grad);border-radius:5px}
+.bar>b{position:absolute;right:8px;top:0;line-height:20px;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+/* predicted top-3 podium */
+.top3{margin:0 0 6px}
+.t3h{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:2px 2px 9px;display:flex;align-items:center;gap:8px}
+.t3h::after{content:"";flex:1;height:2px;border-radius:2px;background:var(--brand-grad);opacity:.5}
+.pod{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:13px;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.pod1{box-shadow:0 0 0 2px color-mix(in srgb,var(--brand-blue) 55%,transparent);border-color:transparent}
+.medal{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:17px;color:#fff;font-variant-numeric:tabular-nums}
+.medal.m1{background:var(--brand-grad)}
+.medal.m2{background:#9aa0a6}
+.medal.m3{background:#c0824f}
+.podhorse{font-weight:660;font-size:16.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.podbar{height:8px;background:var(--chip);border-radius:4px;margin-top:7px;overflow:hidden}
+.podbar>span{display:block;height:100%;background:var(--brand-grad);border-radius:4px}
+.podpct{font-size:20px;font-weight:750;font-variant-numeric:tabular-nums;color:var(--ink)}
 .pricerow{display:flex;gap:16px;margin-top:8px;font-size:13.5px;font-variant-numeric:tabular-nums}
 .pricerow .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.02em}
 .pricerow .v{font-weight:640}
@@ -221,10 +239,9 @@ function viewDay(day){
   h+=`<div class="sectlabel">Meetings</div>`;
   d.meetings.forEach((m,i)=>{
     h+=`<a class="card" href="#/${day}/m/${i}">
-      <div class="time">${esc(m.first_off||'')}</div>
       <div class="main"><div class="h">${esc(m.course)}
         ${m.n_value?`<span class="vbadge">${m.n_value} value</span>`:''}</div>
-        <div class="m">${plural(m.n_races,'race')} · ${esc(m.going||'')}</div></div>
+        ${m.going?`<div class="m">${esc(m.going)}</div>`:''}</div>
       <span class="chev">›</span></a>`;
   });
   h+=`<div class="note">Updated ${esc(d.generated_label||'')}. 18+ · begambleaware.org.</div>`;
@@ -250,6 +267,17 @@ function viewRace(day,mi,ri){
   const pmax=Math.max(...r.runners.map(x=>x.p_win),0.01);
   let h=`<div class="rhead"><div class="t">${esc(r.off||'')} ${esc(r.title)}</div>
     <div class="d">${esc(r.distance)} · ${esc(r.going)} · ${r.ran} runners</div></div>`;
+  // graphic predicted top 3
+  const t3 = r.runners.slice(0,3).map(o=>{
+    const pw = Math.max(8, o.p_win/pmax*100);
+    return `<div class="pod pod${o.rank}">
+      <div class="medal m${o.rank}">${o.rank}</div>
+      <div style="min-width:0"><div class="podhorse">${esc(o.horse)}</div>
+        <div class="podbar"><span style="width:${pw}%"></span></div></div>
+      <div class="podpct">${pct(o.p_win)}</div></div>`;
+  }).join('');
+  h += `<div class="top3"><div class="t3h">Predicted top 3</div>${t3}</div>`;
+  h += `<div class="sectlabel">Full field</div>`;
   const HG={b:'blinkers',v:'visor',h:'hood',t:'tongue tie',p:'cheekpieces',e:'eye shield'};
   r.runners.forEach(o=>{
     const w=Math.max(6,o.p_win/pmax*100); const meta=[];
