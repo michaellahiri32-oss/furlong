@@ -162,6 +162,36 @@ a{color:inherit;text-decoration:none}
 .ewcard .ewm span{font-size:12.5px;color:var(--ink2)}
 .vlink.ew{background:color-mix(in srgb,var(--brand-blue) 12%,transparent);
   border-color:color-mix(in srgb,var(--brand-blue) 42%,transparent);color:var(--ink)}
+.vlink.builder{background:var(--surface);border-color:var(--border);color:var(--ink)}
+/* bet builder */
+.bchips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}
+.bchips::-webkit-scrollbar{display:none}
+.bchip{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--ink2);
+  border-radius:20px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.bchip.on{background:var(--brand-grad);color:#fff;border-color:transparent}
+.brow{display:flex;align-items:center;gap:12px;margin:8px 0 4px;flex-wrap:wrap}
+.btog{border:1px solid var(--border);background:var(--surface);color:var(--ink2);border-radius:20px;
+  padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.btog.on{background:color-mix(in srgb,var(--brand-blue) 20%,transparent);color:var(--ink);
+  border-color:color-mix(in srgb,var(--brand-blue) 42%,transparent)}
+.bstake{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.bstake input{width:64px;padding:7px 8px;border:1px solid var(--border);border-radius:8px;
+  background:var(--surface);color:var(--ink);font-size:14px}
+.coupon{display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:11px 13px;margin-bottom:8px;cursor:pointer}
+.coupon .cn{width:26px;height:26px;border-radius:50%;background:var(--chip);display:flex;
+  align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.coupon .ci{flex:1;min-width:0}
+.coupon .ci b{font-size:15.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.coupon .ci span{font-size:12px;color:var(--muted)}
+.coupon .co{font-weight:700;font-variant-numeric:tabular-nums;font-size:15px}
+.bsum{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:8px 15px;margin:14px 0}
+.bsum .row{display:flex;justify-content:space-between;padding:7px 0;font-size:14px;border-bottom:1px solid var(--grid)}
+.bsum .row:last-child{border-bottom:none}
+.bsum .row .k{color:var(--muted)}
+.bsum .row .v{font-weight:640;font-variant-numeric:tabular-nums}
+.bsum .big .k{color:var(--ink)}
+.bsum .big .v{color:var(--good-ink);font-size:17px}
 .empty{text-align:center;color:var(--muted);padding:56px 20px;font-size:14.5px}
 .note{font-size:11.5px;color:var(--muted);margin-top:22px;padding-top:12px;border-top:1px solid var(--grid)}
 </style>
@@ -183,9 +213,12 @@ a{color:inherit;text-decoration:none}
   <a href="#/tomorrow" data-r="tomorrow"><span class="mi">📅</span>Tomorrow’s racing</a>
   <a href="#/today/ew" data-r="today/ew"><span class="mi">◆</span>Each-way shots — today</a>
   <a href="#/tomorrow/ew" data-r="tomorrow/ew"><span class="mi">◇</span>Each-way shots — tomorrow</a>
+  <a href="#/today/builder" data-r="today/builder"><span class="mi">🎫</span>Bet builder — today</a>
+  <a href="#/tomorrow/builder" data-r="tomorrow/builder"><span class="mi">🎫</span>Bet builder — tomorrow</a>
 </nav>
 <script>
-const S = { days:{today:null, tomorrow:null}, loaded:false };
+const S = { days:{today:null, tomorrow:null}, loaded:false,
+  builder:{type:'lucky15', strat:'balanced', ew:false, stake:1, day:'today'} };
 const $ = id => document.getElementById(id);
 const esc = s => (s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const pct = p => (p*100).toFixed(p>=0.1?0:1)+'%';
@@ -269,6 +302,8 @@ function viewDay(day){
       ◆ Each-way shots — ${plural(t.ew,'race')}<span class="chev">›</span></div>`;
   if(t.value) h+=`<div class="vlink" onclick="location.hash='#/${day}/value'">
       ▲ Value shortlist — ${plural(t.value,'selection')}<span class="chev">›</span></div>`;
+  h+=`<div class="vlink builder" onclick="location.hash='#/${day}/builder'">
+      🎫 Bet builder — Lucky 15, Yankee, Heinz…<span class="chev">›</span></div>`;
   h+=`<div class="tiles">
     <div class="tile"><div class="n">${t.meetings}</div><div class="l">Courses</div></div>
     <div class="tile"><div class="n">${t.races}</div><div class="l">Races</div></div>
@@ -385,6 +420,115 @@ function viewEW(day){
   return h;
 }
 
+/* ---- bet builder ---- */
+const BETS={
+  trixie:{label:'Trixie',n:3,sizes:[2,3],bets:4},
+  patent:{label:'Patent',n:3,sizes:[1,2,3],bets:7},
+  yankee:{label:'Yankee',n:4,sizes:[2,3,4],bets:11},
+  lucky15:{label:'Lucky 15',n:4,sizes:[1,2,3,4],bets:15},
+  canadian:{label:'Canadian',n:5,sizes:[2,3,4,5],bets:26},
+  lucky31:{label:'Lucky 31',n:5,sizes:[1,2,3,4,5],bets:31},
+  heinz:{label:'Heinz',n:6,sizes:[2,3,4,5,6],bets:57},
+  lucky63:{label:'Lucky 63',n:6,sizes:[1,2,3,4,5,6],bets:63},
+  superheinz:{label:'Super Heinz',n:7,sizes:[2,3,4,5,6,7],bets:120},
+  goliath:{label:'Goliath',n:8,sizes:[2,3,4,5,6,7,8],bets:247},
+};
+
+function builderCandidates(day, strat){
+  const d=S.days[day]; const cands=[];
+  if(!d||!d.meetings) return cands;
+  d.meetings.forEach((m,mi)=>m.races.forEach((r,ri)=>{
+    if(!r.runners||!r.runners.length) return;
+    let pick=null, score=-1;
+    if(strat==='value'){
+      r.runners.forEach(o=>{
+        if(o.rank>=2 && o.fair_dec>=4 && o.fair_dec<=34 && (o.p_place||0)>=0.20){
+          const s=(o.p_place||0)*o.fair_dec; if(s>score){score=s;pick=o;}
+        }
+      });
+    } else if(strat==='bankers'){
+      pick=r.runners[0]; score=pick.p_win;
+    } else { // balanced
+      pick=r.runners[0]; score=pick.p_win*Math.pow(pick.fair_dec||1,0.35);
+    }
+    if(pick) cands.push(Object.assign({},pick,{course:m.course,off:r.off,mi,ri,score}));
+  }));
+  cands.sort((a,b)=>b.score-a.score);
+  return cands;
+}
+
+function poissonBinom(ps){ let d=[1];
+  ps.forEach(p=>{ const nd=new Array(d.length+1).fill(0);
+    for(let i=0;i<d.length;i++){ nd[i]+=d[i]*(1-p); nd[i+1]+=d[i]*p; } d=nd; }); return d; }
+function esp(odds){ let e=[1];
+  odds.forEach(o=>{ const ne=new Array(e.length+1).fill(0);
+    for(let i=0;i<e.length;i++){ ne[i]+=e[i]; ne[i+1]+=e[i]*o; } e=ne; }); return e; }
+
+function renderBuilder(){ $('view').innerHTML=viewBuilder(S.builder.day); }
+function setBType(t){ S.builder.type=t; renderBuilder(); }
+function setBStrat(s){ S.builder.strat=s; renderBuilder(); }
+function toggleBEW(){ S.builder.ew=!S.builder.ew; renderBuilder(); }
+function setBStake(v){ const n=parseFloat(v); S.builder.stake=(isFinite(n)&&n>0)?n:1; renderBuilder(); }
+
+function viewBuilder(day){
+  S.builder.day=day; const b=S.builder; const cfg=BETS[b.type];
+  const d=S.days[day];
+  setHead('Bet builder', d?d.day_label:'', true);
+  if(!d||!d.meetings||!d.meetings.length)
+    return `<div class="empty">${day==='tomorrow'?'Tomorrow’s card isn’t published yet.':'No racing loaded yet.'}</div>`;
+
+  const types=Object.keys(BETS).map(k=>`<div class="bchip ${b.type===k?'on':''}" onclick="setBType('${k}')">${BETS[k].label}</div>`).join('');
+  const strats=[['bankers','Bankers'],['balanced','Balanced'],['value','Value']]
+    .map(([k,l])=>`<div class="bchip ${b.strat===k?'on':''}" onclick="setBStrat('${k}')">${l}</div>`).join('');
+  let h=`<div class="sectlabel" style="margin-top:2px">Bet type</div><div class="bchips">${types}</div>
+    <div class="sectlabel">Strategy</div><div class="bchips">${strats}</div>
+    <div class="brow">
+      <div class="btog ${b.ew?'on':''}" onclick="toggleBEW()">${b.ew?'✓ ':''}Each-way</div>
+      <div class="bstake">Unit stake £<input type="number" min="0.1" step="0.5" value="${b.stake}"
+        onchange="setBStake(this.value)"></div>
+    </div>`;
+
+  const cands=builderCandidates(day,b.strat);
+  if(cands.length<cfg.n){
+    h+=`<div class="empty">Only ${cands.length} suitable races right now — a ${cfg.label} needs ${cfg.n}. Try a smaller bet or the Balanced/Bankers strategy.</div>`;
+    return h;
+  }
+  const sels=cands.slice(0,cfg.n);
+  h+=`<div class="sectlabel">Your ${cfg.n} selections${b.strat==='value'?' (value angle)':''}</div>`;
+  sels.forEach((o,i)=>{
+    const line=b.ew&&o.p_place!=null?`${pct(o.p_win)} win · ${pct(o.p_place)} place`:`${pct(o.p_win)} win`;
+    h+=`<div class="coupon" onclick="location.hash='#/${day}/m/${o.mi}/r/${o.ri}'">
+      <span class="cn">${i+1}</span>
+      <div class="ci"><b>${esc(o.horse)}</b><span>${esc(o.course)}${o.off?' · '+esc(o.off):''} · ${line}</span></div>
+      <span class="co">${esc(o.fair)}</span></div>`;
+  });
+
+  const pw=sels.map(o=>o.p_win);
+  const dist=poissonBinom(pw);
+  const minS=cfg.sizes[0];
+  const pRet=dist.slice(minS).reduce((a,x)=>a+x,0);
+  const pAll=dist[cfg.n];
+  const expWin=pw.reduce((a,x)=>a+x,0);
+  let ml=0; dist.forEach((x,i)=>{ if(x>dist[ml]) ml=i; });
+  const e=esp(sels.map(o=>o.fair_dec||1));
+  const allWin=cfg.sizes.reduce((a,s)=>a+(e[s]||0),0);
+  const nBets=cfg.bets*(b.ew?2:1);
+  const total=nBets*b.stake;
+
+  h+=`<div class="bsum">
+    <div class="row"><span class="k">${cfg.label}${b.ew?' (e/w)':''}</span><span class="v">${nBets} bets</span></div>
+    <div class="row"><span class="k">Total stake</span><span class="v">£${total.toFixed(2)}</span></div>
+    <div class="row big"><span class="k">Chance of a return</span><span class="v">${(pRet*100).toFixed(0)}%</span></div>
+    <div class="row"><span class="k">Chance all ${cfg.n} win</span><span class="v">${(pAll*100).toFixed(pAll<0.1?1:0)}%</span></div>
+    <div class="row"><span class="k">Most likely winners</span><span class="v">${ml} of ${cfg.n}</span></div>
+    <div class="row"><span class="k">Expected winners</span><span class="v">${expWin.toFixed(1)}</span></div>
+    ${b.ew?`<div class="row"><span class="k">Expected places</span><span class="v">${sels.map(o=>o.p_place||0).reduce((a,x)=>a+x,0).toFixed(1)} of ${cfg.n}</span></div>`:''}
+    <div class="row"><span class="k">If all win (at fair odds)</span><span class="v">£${(allWin*b.stake).toFixed(2)}</span></div>
+  </div>
+  <div class="note">Selections are one per race, ranked by the chosen strategy. Probabilities are the model’s; returns are illustrative at our fair odds — your real return depends on the bookmaker’s prices (which the free data doesn’t include). Not advice. 18+ · begambleaware.org.</div>`;
+  return h;
+}
+
 function route(){
   const p=(location.hash||'#/').slice(2).split('/').filter(x=>x!=='');
   let html;
@@ -393,6 +537,7 @@ function route(){
     const day=p[0];
     if(p[1]==='value') html=viewValue(day);
     else if(p[1]==='ew') html=viewEW(day);
+    else if(p[1]==='builder') html=viewBuilder(day);
     else if(p[1]==='m'&&p[3]==='r') html=viewRace(day,+p[2],+p[4]);
     else if(p[1]==='m') html=viewMeeting(day,+p[2]);
     else html=viewDay(day);
