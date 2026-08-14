@@ -1,8 +1,8 @@
-/* Furlong service worker — installable + offline.
-   Shell: cache-first (fast, works offline). Data: network-first (fresh),
-   falling back to the last cached copy when there's no connection. */
-const SHELL = 'furlong-shell-v2';
-const DATA = 'furlong-data-v2';
+/* Furlong service worker — installable + offline, always fresh.
+   HTML shell and data: network-first (so code + data updates show on refresh),
+   falling back to cache when offline. Static icons: cache-first. */
+const SHELL = 'furlong-shell-v3';
+const DATA = 'furlong-data-v3';
 const SHELL_FILES = [
   './', './index.html', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png',
@@ -23,17 +23,21 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  if (url.pathname.endsWith('.json') && !url.pathname.endsWith('manifest.webmanifest')) {
-    // network-first for the daily data files (data.json, data-tomorrow.json)
+  const isJSON = url.pathname.endsWith('.json') && !url.pathname.endsWith('manifest.webmanifest');
+  const isShell = e.request.mode === 'navigate'
+    || url.pathname.endsWith('/') || url.pathname.endsWith('index.html');
+
+  if (isJSON || isShell) {
+    // network-first: fetch fresh, cache a copy, fall back to cache offline
     e.respondWith(
       fetch(e.request).then(res => {
         const copy = res.clone();
-        caches.open(DATA).then(c => c.put(e.request, copy));
+        caches.open(isJSON ? DATA : SHELL).then(c => c.put(e.request, copy));
         return res;
-      }).catch(() => caches.match(e.request))
+      }).catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
     );
     return;
   }
-  // cache-first for the app shell
+  // cache-first for static assets (icons, manifest)
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });
