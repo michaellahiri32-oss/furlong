@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d0d0d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Furlong</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --page:#f9f9f7; --surface:#fcfcfb; --surface2:#f2f1ec; --ink:#0b0b0b;
+  --ink2:#52514e; --muted:#898781; --grid:#e1e0d9; --border:rgba(11,11,11,.10);
+  --blue:#256abf; --blue-bar:#2a78d6; --chip:#eef0ee; --good:#0ca30c;
+  --good-ink:#006300; --warn:#fab219; color-scheme:light;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root{
+  --page:#0d0d0d; --surface:#1a1a19; --surface2:#232320; --ink:#fff;
+  --ink2:#c3c2b7; --muted:#8f8e86; --grid:#2c2c2a; --border:rgba(255,255,255,.12);
+  --blue:#3987e5; --blue-bar:#3987e5; --chip:#26261f; --good:#0ca30c;
+  --good-ink:#28c028; color-scheme:dark;}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--page);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;
+  line-height:1.4;overscroll-behavior-y:none}
+a{color:inherit;text-decoration:none}
+.app{max-width:640px;margin:0 auto;min-height:100vh}
+/* top bar */
+.top{position:sticky;top:0;z-index:30;background:var(--page);
+  padding:calc(var(--safe-t) + 12px) 12px 10px;border-bottom:1px solid var(--grid)}
+.top .row{display:flex;align-items:center;gap:8px;min-height:34px}
+.iconbtn{border:none;background:none;color:var(--ink);font-size:22px;line-height:1;
+  padding:6px 10px;cursor:pointer;border-radius:10px;flex:none}
+.iconbtn:active{background:var(--surface2)}
+.back{color:var(--blue);font-size:16px;font-weight:600;display:none}
+.back.show{display:inline-flex;align-items:center;gap:3px}
+.htext{flex:1;min-width:0}
+.ttl{font-size:19px;font-weight:680;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+/* burger drawer */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;opacity:0;
+  pointer-events:none;transition:opacity .18s}
+.scrim.open{opacity:1;pointer-events:auto}
+.menu{position:fixed;top:0;right:0;z-index:50;height:100%;width:76%;max-width:320px;
+  background:var(--surface);border-left:1px solid var(--border);
+  transform:translateX(100%);transition:transform .2s ease;
+  padding:calc(var(--safe-t) + 10px) 0 0;box-shadow:-8px 0 30px rgba(0,0,0,.2)}
+.menu.open{transform:translateX(0)}
+.menu .mh{display:flex;align-items:center;gap:10px;padding:8px 18px 14px;
+  border-bottom:1px solid var(--grid)}
+.menu .mh img{width:34px;height:34px;border-radius:9px}
+.menu .mh b{font-size:17px}
+.menu a{display:flex;align-items:center;gap:12px;padding:15px 18px;font-size:16px;
+  font-weight:560;border-bottom:1px solid var(--grid)}
+.menu a .mi{font-size:19px;width:24px;text-align:center;color:var(--muted)}
+.menu a.on{color:var(--blue)} .menu a.on .mi{color:var(--blue)}
+.menu a:active{background:var(--surface2)}
+/* content */
+.wrap{padding:14px 16px calc(28px + var(--safe-b))}
+/* landing */
+.hero{text-align:center;padding:34px 16px 20px}
+.hero img{width:150px;height:150px;border-radius:32px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.hero h1{font-size:26px;margin:18px 0 2px;letter-spacing:.5px}
+.hero p{color:var(--muted);font-size:14px;margin:0}
+.daybtns{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.daybtn{display:flex;align-items:center;gap:14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:16px;padding:18px 18px;cursor:pointer}
+.daybtn:active{background:var(--surface2)}
+.daybtn .lab{flex:1}
+.daybtn .lab b{font-size:19px;display:block}
+.daybtn .lab span{font-size:13px;color:var(--muted)}
+.daybtn .vb{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good-ink);
+  font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px}
+.daybtn .chev{color:var(--muted);font-size:22px}
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:2px 0 14px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:10px 8px;text-align:center}
+.tile .n{font-size:20px;font-weight:680;font-variant-numeric:tabular-nums}
+.tile .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-top:1px}
+.tile.hl .n{color:var(--good-ink)}
+/* value link + list cards */
+.vlink{display:flex;align-items:center;gap:12px;border-radius:14px;padding:14px 15px;
+  margin-bottom:14px;cursor:pointer;color:var(--good-ink);font-weight:640;
+  background:color-mix(in srgb,var(--good) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--good) 30%,transparent)}
+.vlink .chev{margin-left:auto;font-size:20px}
+.card{display:flex;align-items:center;gap:12px;background:var(--surface);
+  border:1px solid var(--border);border-radius:14px;padding:14px 15px;margin-bottom:10px;
+  cursor:pointer;transition:background .12s}
+.card:active{background:var(--surface2)}
+.card .main{flex:1;min-width:0}
+.card .h{font-size:17px;font-weight:640;display:flex;align-items:center;gap:8px}
+.card .m{font-size:13px;color:var(--muted);margin-top:2px}
+.chev{color:var(--muted);font-size:20px;flex:none}
+.time{font-variant-numeric:tabular-nums;font-weight:680;font-size:15px;min-width:46px}
+.vbadge{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good-ink);
+  font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.sectlabel{font-size:12px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.05em;margin:16px 2px 8px}
+/* race runners */
+.rhead{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:12px 15px;margin-bottom:12px}
+.rhead .t{font-weight:660;font-size:16px}.rhead .d{color:var(--muted);font-size:13px;margin-top:3px}
+.runner{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:11px 13px;margin-bottom:8px}
+.runner.top{border-color:color-mix(in srgb,var(--blue) 45%,var(--border))}
+.runner .r1{display:flex;align-items:baseline;gap:9px}
+.rank{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:680;font-size:14px;min-width:16px}
+.hname{font-weight:650;font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{font-size:12px;color:var(--muted);margin:5px 0 7px;display:flex;gap:12px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.bar{position:relative;height:20px;background:var(--chip);border-radius:5px;overflow:hidden}
+.bar>span{position:absolute;inset:0 auto 0 0;background:var(--blue-bar);border-radius:5px}
+.bar>b{position:absolute;right:8px;top:0;line-height:20px;font-size:12.5px;font-weight:640;font-variant-numeric:tabular-nums}
+.pricerow{display:flex;gap:16px;margin-top:8px;font-size:13.5px;font-variant-numeric:tabular-nums}
+.pricerow .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.02em}
+.pricerow .v{font-weight:640}
+.pill{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;
+  padding:2px 8px;border-radius:20px;margin-left:auto}
+.pill.win{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good-ink)}
+.pill.ew{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--ink2)}
+.empty{text-align:center;color:var(--muted);padding:56px 20px;font-size:14.5px}
+.note{font-size:11.5px;color:var(--muted);margin-top:22px;padding-top:12px;border-top:1px solid var(--grid)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><div class="row">
+    <button class="iconbtn back" id="back">‹ Back</button>
+    <div class="htext"><div class="ttl" id="title">Furlong</div><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="burger" aria-label="Menu">☰</button>
+  </div></div>
+  <div class="wrap" id="view"></div>
+</div>
+<div class="scrim" id="scrim"></div>
+<nav class="menu" id="menu">
+  <div class="mh"><img src="icon-192.png" alt=""><b>Furlong</b></div>
+  <a href="#/" data-r=""><span class="mi">⌂</span>Home</a>
+  <a href="#/today" data-r="today"><span class="mi">🏇</span>Today’s racing</a>
+  <a href="#/tomorrow" data-r="tomorrow"><span class="mi">📅</span>Tomorrow’s racing</a>
+  <a href="#/today/value" data-r="today/value"><span class="mi">◆</span>Value — today</a>
+  <a href="#/tomorrow/value" data-r="tomorrow/value"><span class="mi">◇</span>Value — tomorrow</a>
+</nav>
+<script>
+const S = { days:{today:null, tomorrow:null}, loaded:false };
+const $ = id => document.getElementById(id);
+const esc = s => (s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const pct = p => (p*100).toFixed(p>=0.1?0:1)+'%';
+const plural = (n,w)=>`${n} ${w}${n===1?'':'s'}`;
+const DAY_NAME = {today:'Today', tomorrow:'Tomorrow'};
+
+async function fetchJSON(f){
+  try{ const r=await fetch(f,{cache:'no-store'}); if(r.ok) return await r.json(); }catch(e){}
+  try{ const c=await fetch(f); return await c.json(); }catch(e){ return null; }
+}
+async function load(){
+  const [t,m] = await Promise.all([fetchJSON('data.json'), fetchJSON('data-tomorrow.json')]);
+  S.days.today=t; S.days.tomorrow=m; S.loaded=true; route();
+}
+
+/* burger */
+function openMenu(o){ $('menu').classList.toggle('open',o); $('scrim').classList.toggle('open',o); }
+$('burger').addEventListener('click',()=>openMenu(!$('menu').classList.contains('open')));
+$('scrim').addEventListener('click',()=>openMenu(false));
+$('menu').addEventListener('click',e=>{ if(e.target.closest('a')) openMenu(false); });
+
+function setHead(title, sub, showBack){
+  $('title').textContent=title; $('subtitle').textContent=sub||'';
+  $('back').classList.toggle('show',!!showBack);
+  const cur=(location.hash||'#/').slice(2);
+  $('menu').querySelectorAll('a').forEach(a=>a.classList.toggle('on',a.getAttribute('data-r')===cur));
+}
+function pillFor(o){
+  if(o.value_win) return `<span class="pill win">▲ VALUE ${o.ev_win>0?'+':''}${Math.round(o.ev_win*100)}%</span>`;
+  if(o.value_ew) return `<span class="pill ew">EW +${Math.round((o.ev_ew||0)*100)}%</span>`;
+  return '';
+}
+
+/* ---- views ---- */
+function viewLanding(){
+  setHead('Furlong','', false);
+  const sum = k => {
+    const d=S.days[k];
+    if(!S.loaded) return 'Loading…';
+    if(!d||!d.meetings||!d.meetings.length) return k==='tomorrow'?'Not published yet':'No racing loaded';
+    return `${d.day_label} · ${plural(d.totals.meetings,'course')}`;
+  };
+  const vb = k => { const d=S.days[k]; return (d&&d.totals&&d.totals.value)?`<span class="vb">${d.totals.value} value</span>`:''; };
+  return `<div class="hero"><img src="icon-512.png" alt="Furlong"><h1>FURLONG</h1>
+      <p>Win &amp; Place predictions</p></div>
+    <div class="daybtns">
+      <div class="daybtn" onclick="location.hash='#/today'">
+        <div class="lab"><b>Today</b><span>${esc(sum('today'))}</span></div>${vb('today')}<span class="chev">›</span></div>
+      <div class="daybtn" onclick="location.hash='#/tomorrow'">
+        <div class="lab"><b>Tomorrow</b><span>${esc(sum('tomorrow'))}</span></div>${vb('tomorrow')}<span class="chev">›</span></div>
+    </div>`;
+}
+
+function viewDay(day){
+  const d=S.days[day];
+  setHead(`${DAY_NAME[day]}’s Racing`, d?d.day_label:'', true);
+  if(!S.loaded) return `<div class="empty">Loading…</div>`;
+  if(!d||!d.meetings||!d.meetings.length)
+    return `<div class="empty">${day==='tomorrow'
+      ? 'Tomorrow’s card isn’t published yet — declarations usually land the evening before. Check back later.'
+      : 'No racing loaded yet.'}</div>`;
+  const t=d.totals;
+  let h=`<div class="vlink" onclick="location.hash='#/${day}/value'">
+      ◆ Value shortlist${t.value?` — ${plural(t.value,'selection')}`:''}<span class="chev">›</span></div>`;
+  h+=`<div class="tiles">
+    <div class="tile"><div class="n">${t.meetings}</div><div class="l">Courses</div></div>
+    <div class="tile"><div class="n">${t.races}</div><div class="l">Races</div></div>
+    <div class="tile"><div class="n">${t.runners}</div><div class="l">Runners</div></div>
+    <div class="tile hl"><div class="n">${t.value}</div><div class="l">Value</div></div></div>`;
+  h+=`<div class="sectlabel">Meetings</div>`;
+  d.meetings.forEach((m,i)=>{
+    h+=`<a class="card" href="#/${day}/m/${i}">
+      <div class="time">${esc(m.first_off||'')}</div>
+      <div class="main"><div class="h">${esc(m.course)}
+        ${m.n_value?`<span class="vbadge">${m.n_value} value</span>`:''}</div>
+        <div class="m">${plural(m.n_races,'race')} · ${esc(m.going||'')}</div></div>
+      <span class="chev">›</span></a>`;
+  });
+  h+=`<div class="note">Updated ${esc(d.generated_label||'')}. 18+ · begambleaware.org.</div>`;
+  return h;
+}
+
+function viewMeeting(day,mi){
+  const d=S.days[day]; const m=d&&d.meetings[mi];
+  if(!m) return viewDay(day);
+  setHead(m.course, `${DAY_NAME[day]} · ${plural(m.n_races,'race')} · ${esc(m.going||'')}`, true);
+  return m.races.map((r,ri)=>`<a class="card" href="#/${day}/m/${mi}/r/${ri}">
+      <div class="time">${esc(r.off||'')}</div>
+      <div class="main"><div class="h" style="font-size:15px">${esc(r.title)}
+        ${r.n_value?`<span class="vbadge">${r.n_value}</span>`:''}</div>
+        <div class="m">${esc(r.distance)} · ${r.ran} runners · ${esc(r.going)}</div></div>
+      <span class="chev">›</span></a>`).join('');
+}
+
+function viewRace(day,mi,ri){
+  const d=S.days[day]; const m=d&&d.meetings[mi]; const r=m&&m.races[ri];
+  if(!r) return viewDay(day);
+  setHead(m.course, `${esc(r.off||'')} · ${esc(r.title)}`, true);
+  const pmax=Math.max(...r.runners.map(x=>x.p_win),0.01);
+  let h=`<div class="rhead"><div class="t">${esc(r.off||'')} ${esc(r.title)}</div>
+    <div class="d">${esc(r.distance)} · ${esc(r.going)} · ${r.ran} runners</div></div>`;
+  r.runners.forEach(o=>{
+    const w=Math.max(6,o.p_win/pmax*100); const meta=[];
+    if(o.draw!=null) meta.push(`Draw ${o.draw}`);
+    if(o.or!=null) meta.push(`OR ${o.or}`);
+    if(o.rpr!=null) meta.push(`RPR ${o.rpr}`);
+    h+=`<div class="runner ${o.rank===1?'top':''}">
+      <div class="r1"><span class="rank">${o.rank}</span>
+        <span class="hname">${esc(o.horse)}</span>${pillFor(o)}</div>
+      <div class="meta">${meta.join(' · ')}</div>
+      <div class="bar"><span style="width:${w}%"></span><b>${pct(o.p_win)}</b></div>
+      <div class="pricerow">
+        <div><div class="k">Fair</div><div class="v">${esc(o.fair)}</div></div>
+        <div><div class="k">Price</div><div class="v">${o.sp?esc(o.sp):'—'}</div></div>
+        <div><div class="k">Place</div><div class="v">${o.p_place!=null?pct(o.p_place):'—'}</div></div>
+      </div></div>`;
+  });
+  return h;
+}
+
+function viewValue(day){
+  const d=S.days[day];
+  setHead(`Value — ${DAY_NAME[day]}`, d?d.day_label:'', true);
+  if(!d) return `<div class="empty">Not published yet.</div>`;
+  const v=d.value_shortlist||[];
+  if(!v.length) return `<div class="empty">No value selections flagged for ${DAY_NAME[day].toLowerCase()}.</div>`;
+  let h=`<div class="sectlabel">${plural(v.length,'selection')} rated shorter than the price</div>`;
+  v.forEach(o=>{ h+=`<div class="runner">
+      <div class="r1"><span class="hname">${esc(o.horse)}</span>${pillFor(o)}</div>
+      <div class="meta">${esc(o.course)}${o.off?' · '+esc(o.off):''} · ${esc(o.distance)}</div>
+      <div class="pricerow">
+        <div><div class="k">Win%</div><div class="v">${pct(o.p_win)}</div></div>
+        <div><div class="k">Fair</div><div class="v">${esc(o.fair)}</div></div>
+        <div><div class="k">Price</div><div class="v">${o.sp?esc(o.sp):'—'}</div></div></div></div>`; });
+  h+=`<div class="note">Value = model fair odds shorter than the price shown. Not advice. 18+ · begambleaware.org.</div>`;
+  return h;
+}
+
+function route(){
+  const p=(location.hash||'#/').slice(2).split('/').filter(x=>x!=='');
+  let html;
+  if(p.length===0) html=viewLanding();
+  else if(p[0]==='today'||p[0]==='tomorrow'){
+    const day=p[0];
+    if(p[1]==='value') html=viewValue(day);
+    else if(p[1]==='m'&&p[3]==='r') html=viewRace(day,+p[2],+p[4]);
+    else if(p[1]==='m') html=viewMeeting(day,+p[2]);
+    else html=viewDay(day);
+  } else html=viewLanding();
+  $('view').innerHTML=html; window.scrollTo(0,0);
+}
+
+$('back').addEventListener('click',()=>{ if(history.length>1) history.back(); else location.hash='#/'; });
+window.addEventListener('hashchange',route);
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+route(); load();
+setInterval(load, 15*60*1000);
+</script>
+</body>
+</html>

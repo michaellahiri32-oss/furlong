@@ -1,0 +1,9 @@
+# Furlong via cron (Linux, or macOS if you prefer cron to launchd).
+# Edit your crontab with:  crontab -e
+# Replace /path/to/furlong with the real project path.
+
+# Daily predictions at 08:00
+0 8 * * *  /bin/bash /path/to/furlong/scripts/run_furlong.sh daily
+
+# Weekly refresh + retrain, Sundays at 06:00
+0 6 * * 0  /bin/bash /path/to/furlong/scripts/run_furlong.sh retrain

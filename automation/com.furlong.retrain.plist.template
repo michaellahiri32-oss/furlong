@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Weekly retrain: refresh results from rpscrape + rebuild the models. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.furlong.retrain</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__FURLONG_DIR__/scripts/run_furlong.sh</string>
+    <string>retrain</string>
+  </array>
+  <!-- Sundays at 06:00 -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key><integer>0</integer>
+    <key>Hour</key><integer>6</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>__FURLONG_DIR__/logs/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>__FURLONG_DIR__/logs/launchd.err.log</string>
+  <key>WorkingDirectory</key>
+  <string>__FURLONG_DIR__</string>
+</dict>
+</plist>

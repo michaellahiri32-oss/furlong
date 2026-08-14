@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Template. install_macos.sh fills in __FURLONG_DIR__ and installs this. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.furlong.daily</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__FURLONG_DIR__/scripts/run_furlong.sh</string>
+    <string>daily</string>
+  </array>
+
+  <!-- Run every morning at 08:00. On Sundays, also retrain (see second job). -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>8</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+
+  <!-- If the Mac was asleep at 08:00, run as soon as it wakes. -->
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>__FURLONG_DIR__/logs/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>__FURLONG_DIR__/logs/launchd.err.log</string>
+
+  <key>WorkingDirectory</key>
+  <string>__FURLONG_DIR__</string>
+</dict>
+</plist>
