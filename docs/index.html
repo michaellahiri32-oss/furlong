@@ -500,7 +500,7 @@ function viewBuilder(day){
     h+=`<div class="coupon" onclick="location.hash='#/${day}/m/${o.mi}/r/${o.ri}'">
       <span class="cn">${i+1}</span>
       <div class="ci"><b>${esc(o.horse)}</b><span>${esc(o.course)}${o.off?' · '+esc(o.off):''} · ${line}</span></div>
-      <span class="co">${esc(o.fair)}</span></div>`;
+      <span class="co">${esc(o.sp||o.fair)}</span></div>`;
   });
 
   const pw=sels.map(o=>o.p_win);
@@ -510,7 +510,8 @@ function viewBuilder(day){
   const pAll=dist[cfg.n];
   const expWin=pw.reduce((a,x)=>a+x,0);
   let ml=0; dist.forEach((x,i)=>{ if(x>dist[ml]) ml=i; });
-  const e=esp(sels.map(o=>o.fair_dec||1));
+  const usingOdds=sels.some(o=>o.sp_dec!=null);
+  const e=esp(sels.map(o=>o.sp_dec||o.fair_dec||1));
   const allWin=cfg.sizes.reduce((a,s)=>a+(e[s]||0),0);
   const nBets=cfg.bets*(b.ew?2:1);
   const total=nBets*b.stake;
@@ -523,9 +524,9 @@ function viewBuilder(day){
     <div class="row"><span class="k">Most likely winners</span><span class="v">${ml} of ${cfg.n}</span></div>
     <div class="row"><span class="k">Expected winners</span><span class="v">${expWin.toFixed(1)}</span></div>
     ${b.ew?`<div class="row"><span class="k">Expected places</span><span class="v">${sels.map(o=>o.p_place||0).reduce((a,x)=>a+x,0).toFixed(1)} of ${cfg.n}</span></div>`:''}
-    <div class="row"><span class="k">If all win (at fair odds)</span><span class="v">£${(allWin*b.stake).toFixed(2)}</span></div>
+    <div class="row"><span class="k">If all win (${usingOdds?'at odds':'at fair odds'})</span><span class="v">£${(allWin*b.stake).toFixed(2)}</span></div>
   </div>
-  <div class="note">Selections are one per race, ranked by the chosen strategy. Probabilities are the model’s; returns are illustrative at our fair odds — your real return depends on the bookmaker’s prices (which the free data doesn’t include). Not advice. 18+ · begambleaware.org.</div>`;
+  <div class="note">Selections are one per race, ranked by the chosen strategy. Probabilities are the model’s${usingOdds?'; returns use the best available bookmaker odds (final return depends on the price you actually take)':'; returns are illustrative at our fair odds until live prices are available'}. Not advice. 18+ · begambleaware.org.</div>`;
   return h;
 }
 
