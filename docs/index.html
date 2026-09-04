@@ -206,6 +206,16 @@ a{color:inherit;text-decoration:none}
 .sval{font-weight:740;font-variant-numeric:tabular-nums;text-align:right;flex:none}
 .sval span{display:block;font-size:12px;font-weight:600}
 .sval.pos{color:var(--good-ink)} .sval.neg{color:#d64545}
+/* my horses */
+.star{border:none;background:none;color:var(--muted);font-size:21px;line-height:1;padding:2px 4px;cursor:pointer;flex:none;margin-left:6px}
+.star.on{color:var(--warn)}
+.vlink.horses{background:color-mix(in srgb,var(--warn) 15%,transparent);border-color:color-mix(in srgb,var(--warn) 42%,transparent);color:var(--ink)}
+.hcard{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.hcard.run{cursor:pointer;border-color:color-mix(in srgb,var(--good) 38%,var(--border))}
+.hcard.run:active{background:var(--surface2)}
+.hcard .hmain{flex:1;min-width:0}
+.hcard .hmain b{font-size:15.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hcard .hmain span{font-size:12.5px;color:var(--muted)}
 .empty{text-align:center;color:var(--muted);padding:56px 20px;font-size:14.5px}
 .note{font-size:11.5px;color:var(--muted);margin-top:22px;padding-top:12px;border-top:1px solid var(--grid)}
 </style>
@@ -224,6 +234,7 @@ a{color:inherit;text-decoration:none}
   <div class="mh"><img src="icon-192.png" alt=""><b>Furlong</b></div>
   <a href="#/" data-r=""><span class="mi">⌂</span>Home</a>
   <a href="#/tracker" data-r="tracker"><span class="mi">📊</span>Tracker</a>
+  <a href="#/horses" data-r="horses"><span class="mi">★</span>My Horses</a>
   <a href="#/today" data-r="today"><span class="mi">🏇</span>Today’s racing</a>
   <a href="#/tomorrow" data-r="tomorrow"><span class="mi">📅</span>Tomorrow’s racing</a>
   <a href="#/today/ew" data-r="today/ew"><span class="mi">◆</span>Each-way shots — today</a>
@@ -233,7 +244,34 @@ a{color:inherit;text-decoration:none}
 </nav>
 <script>
 const S = { days:{today:null, tomorrow:null}, loaded:false, tracker:null, trackerStrat:'value',
-  builder:{type:'lucky15', strat:'balanced', ew:false, stake:1, day:'today'} };
+  horses:[], builder:{type:'lucky15', strat:'balanced', ew:false, stake:1, day:'today'} };
+
+/* my horses — a personal watchlist stored on this device */
+function loadHorses(){ try{ return JSON.parse(localStorage.getItem('furlong_horses')||'[]'); }catch(e){ return []; } }
+function saveHorses(){ try{ localStorage.setItem('furlong_horses', JSON.stringify(S.horses)); }catch(e){} }
+function isTracked(id){ return !!id && S.horses.some(h=>h.id===id); }
+function nameForId(id){ const h=S.horses.find(x=>x.id===id); if(h) return h.name;
+  for(const day of ['today','tomorrow']){ const d=S.days[day]; if(!d||!d.meetings) continue;
+    for(const m of d.meetings) for(const r of m.races) for(const o of (r.runners||[])) if(o.id===id) return o.horse; }
+  return id;
+}
+function toggleHorse(id,ev){ if(ev){ ev.stopPropagation(); ev.preventDefault(); } if(!id) return;
+  if(isTracked(id)) S.horses=S.horses.filter(h=>h.id!==id);
+  else S.horses=[{id,name:nameForId(id),added:Date.now()},...S.horses];
+  saveHorses(); route();
+}
+function horseRuns(id){ const runs=[];
+  ['today','tomorrow'].forEach(day=>{ const d=S.days[day]; if(!d||!d.meetings) return;
+    d.meetings.forEach((m,mi)=>m.races.forEach((r,ri)=>(r.runners||[]).forEach(o=>{
+      if(o.id&&o.id===id) runs.push({day,mi,ri,course:m.course,off:r.off||'',title:r.title,p_win:o.p_win}); })));
+  }); return runs;
+}
+function runningCount(){ const d=S.days.today; if(!d||!d.meetings) return 0; const ids=new Set();
+  d.meetings.forEach(m=>m.races.forEach(r=>(r.runners||[]).forEach(o=>{ if(isTracked(o.id)) ids.add(o.id); }))); return ids.size;
+}
+function horsesBanner(){ const n=runningCount(); if(!n) return '';
+  return `<div class="vlink horses" onclick="location.hash='#/horses'">★ ${n} of your horse${n===1?'':'s'} run${n===1?'s':''} today<span class="chev">›</span></div>`;
+}
 const $ = id => document.getElementById(id);
 const esc = s => (s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const pct = p => (p*100).toFixed(p>=0.1?0:1)+'%';
@@ -304,6 +342,8 @@ function viewLanding(){
   const tkSub = (tk&&tk.days) ? `${money(tk.strategies.value?tk.strategies.value.profit:0)} on value · ${tk.days} day${tk.days===1?'':'s'}` : 'how the picks are performing';
   h += `<div class="vlink" style="margin-top:18px" onclick="location.hash='#/tracker'">
       📊 Tracker — ${esc(tkSub)}<span class="chev">›</span></div>`;
+  const hb=horsesBanner();
+  h += hb || `<div class="vlink" onclick="location.hash='#/horses'">★ My Horses${S.horses.length?' ('+S.horses.length+')':''}<span class="chev">›</span></div>`;
   return h;
 }
 
@@ -317,6 +357,7 @@ function viewDay(day){
       : 'No racing loaded yet.'}</div>`;
   const t=d.totals;
   let h='';
+  if(day==='today') h+=horsesBanner();
   if(t.ew) h+=`<div class="vlink ew" onclick="location.hash='#/${day}/ew'">
       ◆ Each-way shots — ${plural(t.ew,'race')}<span class="chev">›</span></div>`;
   if(t.value) h+=`<div class="vlink" onclick="location.hash='#/${day}/value'">
@@ -387,9 +428,10 @@ function viewRace(day,mi,ri){
     if(o.rpr!=null) meta.push(`RPR ${o.rpr}`);
     if(o.headgear) meta.push(esc(HG[o.headgear.toLowerCase()]||o.headgear));
     const conn=[o.jockey,o.trainer].filter(Boolean).map(esc).join(' · ');
+    const star = o.id?`<button class="star ${isTracked(o.id)?'on':''}" onclick="toggleHorse('${o.id}',event)">${isTracked(o.id)?'★':'☆'}</button>`:'';
     h+=`<div class="runner ${o.rank===1?'top':''}">
       <div class="r1"><span class="rank">${o.number!=null?o.number:o.rank}</span>
-        <span class="hname">${esc(o.horse)}</span>${pillFor(o)}</div>
+        <span class="hname">${esc(o.horse)}</span>${pillFor(o)}${star}</div>
       <div class="meta">${meta.join(' · ')}</div>
       ${conn?`<div class="conn">${conn}</div>`:''}
       <div class="bar"><span style="width:${w}%"></span><b>${pct(o.p_win)}</b></div>
@@ -598,11 +640,30 @@ function viewTracker(){
   return h;
 }
 
+function viewHorses(){
+  setHead('My Horses', `${S.horses.length} tracked`, true);
+  if(!S.horses.length) return `<div class="empty">No horses tracked yet. Open any race and tap the ☆ next to a horse to add it — then you'll see here whenever it's entered today or tomorrow. 🐎</div>`;
+  const running=[], idle=[];
+  S.horses.forEach(h=>{ const runs=horseRuns(h.id); if(runs.length) runs.forEach(r=>running.push({h,r})); else idle.push(h); });
+  let html='';
+  if(running.length){ html+=`<div class="sectlabel">Running today / tomorrow</div>`;
+    running.forEach(({h,r})=>{ html+=`<div class="hcard run" onclick="location.hash='#/${r.day}/m/${r.mi}/r/${r.ri}'">
+      <div class="hmain"><b>${esc(h.name)}</b><span>${DAY_NAME[r.day]} · ${esc(r.course)} ${esc(r.off)} · ${pct(r.p_win)} win</span></div>
+      <button class="star on" onclick="toggleHorse('${h.id}',event)">★</button>
+      <span class="chev">›</span></div>`; }); }
+  if(idle.length){ html+=`<div class="sectlabel">${running.length?'Not entered today or tomorrow':'Tracked horses'}</div>`;
+    idle.forEach(h=>{ html+=`<div class="hcard">
+      <div class="hmain"><b>${esc(h.name)}</b><span>Not entered today or tomorrow</span></div>
+      <button class="star on" onclick="toggleHorse('${h.id}',event)">★</button></div>`; }); }
+  return html;
+}
+
 function route(){
   const p=(location.hash||'#/').slice(2).split('/').filter(x=>x!=='');
   let html;
   if(p.length===0) html=viewLanding();
   else if(p[0]==='tracker') html=viewTracker();
+  else if(p[0]==='horses') html=viewHorses();
   else if(p[0]==='today'||p[0]==='tomorrow'){
     const day=p[0];
     if(p[1]==='value') html=viewValue(day);
@@ -618,6 +679,7 @@ function route(){
 $('back').addEventListener('click',()=>{ if(history.length>1) history.back(); else location.hash='#/'; });
 window.addEventListener('hashchange',route);
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
+S.horses=loadHorses();
 route(); load();
 setInterval(load, 15*60*1000);
 </script>
