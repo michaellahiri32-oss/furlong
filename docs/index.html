@@ -282,9 +282,20 @@ async function fetchJSON(f){
   try{ const r=await fetch(f,{cache:'no-store'}); if(r.ok) return await r.json(); }catch(e){}
   try{ const c=await fetch(f); return await c.json(); }catch(e){ return null; }
 }
+function isFreshTomorrow(today, tom){
+  if(!tom || !tom.date) return false;
+  // Expected tomorrow = the day after whatever today's feed says is today
+  // (falls back to the device clock). Guards against a stale tomorrow file.
+  let base = (today && today.date) ? new Date(today.date+'T00:00:00') : new Date();
+  base.setDate(base.getDate()+1);
+  const y=base.getFullYear(), mo=String(base.getMonth()+1).padStart(2,'0'), d=String(base.getDate()).padStart(2,'0');
+  return tom.date === `${y}-${mo}-${d}`;
+}
 async function load(){
   const [t,m,tr] = await Promise.all([fetchJSON('data.json'), fetchJSON('data-tomorrow.json'), fetchJSON('tracker.json')]);
-  S.days.today=t; S.days.tomorrow=m; S.tracker=tr; S.loaded=true; route();
+  S.days.today=t;
+  S.days.tomorrow = isFreshTomorrow(t,m) ? m : null;   // ignore a stale tomorrow file
+  S.tracker=tr; S.loaded=true; route();
 }
 
 /* burger */

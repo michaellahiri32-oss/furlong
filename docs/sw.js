@@ -2,8 +2,8 @@
    HTML shell and data: network-first with cache:'reload' so we bypass the HTTP
    cache and always get the newest code + data; fall back to cache when offline.
    Static icons: cache-first. */
-const SHELL = 'furlong-shell-v4';
-const DATA = 'furlong-data-v4';
+const SHELL = 'furlong-shell-v5';
+const DATA = 'furlong-data-v5';
 const SHELL_FILES = [
   './', './index.html', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './icon-maskable-512.png',
